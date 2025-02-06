@@ -1,5 +1,7 @@
-from dataclasses import dataclass
+from typing import Dict
+from dataclasses import dataclass, field
 
+from controller.device import Device
 from controller import Robot as BaseRobot
 
 from .devices import Motor, DistanceSensor, Receiver, Emitter, InertialUnit, GPS
@@ -20,28 +22,21 @@ class RobotWheels:
 
 @dataclass
 class RobotSensors:
-    """
-    RobotSensors class represents the distance sensors attached to a robot.
+    """RobotSensors class represents the distance sensors attached to a robot."""
 
-    Attributes:
-        front_left (DistanceSensor): Sensor located at the front left of the robot.
-        front_right (DistanceSensor): Sensor located at the front right of the robot.
-        right_front (DistanceSensor): Sensor located at the right front of the robot.
-        right_back (DistanceSensor): Sensor located at the right back of the robot.
-        back_left (DistanceSensor): Sensor located at the back left of the robot.
-        back_right (DistanceSensor): Sensor located at the back right of the robot.
-        left_front (DistanceSensor): Sensor located at the left front of the robot.
-        left_back (DistanceSensor): Sensor located at the left back of the robot.
-    """
-    
-    front_left: DistanceSensor
-    front_right: DistanceSensor
-    right_front: DistanceSensor
-    right_back: DistanceSensor
-    back_left: DistanceSensor
-    back_right: DistanceSensor
-    left_front: DistanceSensor
-    left_back: DistanceSensor
+    _data: Dict[str, DistanceSensor] = field(default_factory=dict)
+
+    def __getattr__(self, key: str) -> DistanceSensor:
+        try:
+            return self._data[key]
+        except KeyError:
+            raise AttributeError(f"Attribute {key} not found")
+
+    def __setattr__(self, key: str, value: DistanceSensor):
+        if key == "_data":
+            super().__setattr__(key, value)
+        else:
+            self._data[key] = value
 
 
 class Robot(BaseRobot):
@@ -64,6 +59,8 @@ class Robot(BaseRobot):
         """
         
         super().__init__()
+        self.devices: Dict[str, Device]
+
         self.max_speed = max_speed
         self.time_step = int(self.getBasicTimeStep())
 
@@ -76,17 +73,11 @@ class Robot(BaseRobot):
             right=Motor('wheel1 motor', self.max_speed),
             left=Motor('wheel2 motor', self.max_speed)
         )
-
-        self.sensors = RobotSensors(
-            front_left=DistanceSensor('D1', self.time_step),
-            front_right=DistanceSensor('D8', self.time_step),
-            right_front=DistanceSensor('D7', self.time_step),
-            right_back=DistanceSensor('D6', self.time_step),
-            back_left=DistanceSensor('D3', self.time_step),
-            back_right=DistanceSensor('D5', self.time_step),
-            left_front=DistanceSensor('D2', self.time_step),
-            left_back=DistanceSensor('D4', self.time_step)
-        )
+        
+        self.sensors = RobotSensors()
+        for device in self.devices:
+            if device.startswith('D'):
+                self.sensors._data[device] = DistanceSensor(device, self.time_step)
 
         if 'inertial_unit' in self.devices:
             self.inertial_unit = InertialUnit('inertial_unit', self.time_step)
