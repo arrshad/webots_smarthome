@@ -30,7 +30,7 @@ class RobotSensors:
         try:
             return self._data[key]
         except KeyError:
-            raise AttributeError(f"Attribute {key} not found")
+            raise AttributeError(f"Sensor '{key}' not found")
 
     def __setattr__(self, key: str, value: DistanceSensor):
         if key == "_data":
