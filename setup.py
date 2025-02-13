@@ -10,6 +10,8 @@ setup(
     install_requires=[
         "pillow",
         "matplotlib",
+        "termcolor",
+        "numpy",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
