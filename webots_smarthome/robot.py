@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Optional
 from dataclasses import dataclass, field
 
 from controller.device import Device
@@ -93,6 +93,19 @@ class Robot(BaseRobot):
                 self.receiver.nextPacket()
                 return float(received_data)
         return 0
+    
+
+    def step(self, time_step: Optional[int] = None) -> int:
+        """
+        Returns the remaining simulation time.
+
+        Parameters:
+            time_step (Optional[int]): The time step to advance the simulation by. If None, the default time step is used.
+
+        Returns:
+            int: The remaining simulation time after the step operation.
+        """
+        return super().step(time_step) # type: ignore
 
 
     def move(self, left: float, right: float):
